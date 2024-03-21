@@ -1,7 +1,9 @@
+// Nhan Tran -
+// Nhu Ly -
 // Trang Nguyen - 100749684
 
+
 import java.util.Scanner;
-import java.util.Random;
 
 public class ConnectFour {
     private static final int ROWS = 6;
