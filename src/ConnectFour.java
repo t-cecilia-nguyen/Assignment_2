@@ -2,7 +2,6 @@
 // Nhu Ly -
 // Trang Nguyen - 100749684
 
-
 import java.util.Scanner;
 
 public class ConnectFour {
