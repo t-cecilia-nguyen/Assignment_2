@@ -1,4 +1,4 @@
-// Adam Simcoe -
+// Adam Simcoe - 101442161
 // Nhan Tran -
 // Nhu Ly -
 // Trang Nguyen - 100749684
@@ -106,11 +106,13 @@ public class ConnectFour {
             }
             printBoard();
 
-            //
-            // CHECK WINNER FUNCTION HERE
-            // CHECK WIN OR DRAW
-            // DISPLAY WINNER OR DECLARE DRAW
-            //
+            if (checkWin(row, column)) {
+                System.out.println(playerNames[currentPlayer] + " wins!");
+                break;
+            } else if (checkDraw()) {
+                System.out.println("It's a draw!");
+                break;
+            }
 
             currentPlayer = 1 - currentPlayer;  // Switch player
         }
@@ -133,5 +135,89 @@ public class ConnectFour {
             }
             System.out.println();
         }
+    }
+
+    // Check Win Methods
+
+    private boolean checkHorizontalWin(int row) {
+        for (int column = 0; column < COLUMNS - 3; column++) {
+            if (board[row][column] == playerSymbols[currentPlayer] &&
+                board[row][column+1] == playerSymbols[currentPlayer] &&
+                board[row][column+2] == playerSymbols[currentPlayer] &&
+                board[row][column+3] == playerSymbols[currentPlayer]) {
+                return true;
+            }
+
+        }
+        return false;
+    }
+
+    private boolean checkVerticalWin(int column) {
+        for (int row = 0; row < ROWS - 3; row++) {
+            if (board[row][column] == playerSymbols[currentPlayer] &&
+                board[row+1][column] == playerSymbols[currentPlayer] &&
+                board[row+2][column] == playerSymbols[currentPlayer] &&
+                board[row+3][column] == playerSymbols[currentPlayer]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkDiagonalWin(int row, int column) {
+        char playerSymbol = playerSymbols[currentPlayer];
+
+        // DESC Diagonal (\)
+        int count = 1;
+        int i = 1;
+
+        // Upwards check
+        while (row - i >= 0 && column - i >= 0 && board[row - i][column - i] == playerSymbol) {
+            count++;
+            i++;
+        }
+
+        // Downwards check
+        i = 1;
+        while (row + i < ROWS && column + i < COLUMNS && board[row + i][column + i] == playerSymbol) {
+            count++;
+            i++;
+        }
+        if (count >= 4) return true;
+
+        // ASC Diagonal (/)
+        count = 1;
+        i = 1;
+
+        // Downwards check
+        while (row + i < ROWS && column - i >= 0 && board[row + i][column - i] == playerSymbol) {
+            count++;
+            i++;
+        }
+
+        // Upwards check
+        i = 1;
+        while (row - i >= 0 && column + i < COLUMNS && board[row- i][column + i] == playerSymbol) {
+            count++;
+            i++;
+        }
+        if (count >= 4) return true;
+
+        return false;
+    }
+
+    private boolean checkWin(int row, int column) {
+        return checkHorizontalWin(row) || checkVerticalWin(column) || checkDiagonalWin(row, column);
+    }
+
+    private boolean checkDraw() {
+        for (int row = 0; row < ROWS; row++) {
+            for (int column = 0; column < COLUMNS; column++) {
+                if (board[row][column] == EMPTY) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
