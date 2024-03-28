@@ -50,7 +50,7 @@ public class ConnectFour {
                 System.out.print("Enter player " + (i + 1) + "'s name: ");
                 playerNames[i] = scanner.next();
                 char playerSymbol = ' ';
-                while (playerSymbol != SYMBOLS[0] && playerSymbol != SYMBOLS[1] || (i == 1 && playerSymbol == playerSymbols[0])) {
+                while (playerSymbol != SYMBOLS[0] && playerSymbol != SYMBOLS[1] || (i == 1 && playerSymbol == playerSymbols[i-1])) {
                     System.out.printf("%s, choose your symbol ('%c' or '%c'): ", playerNames[i], SYMBOLS[0], SYMBOLS[1]);
                     playerSymbol = scanner.next().charAt(0);
                     if (playerSymbol != SYMBOLS[0] && playerSymbol != SYMBOLS[1]) {
@@ -73,6 +73,9 @@ public class ConnectFour {
                 }
             }
             playerSymbols[0] = playerSymbol;
+            //Set bot's symbol and name
+            playerSymbols[1] = (playerSymbol == SYMBOLS[0]) ? SYMBOLS[1] : SYMBOLS[0];
+            playerNames[1] = "Bot";
 
             System.out.print("Do you want to go first or second? (Enter 1 for first, 2 for second): ");
             int choice = 0;
@@ -101,11 +104,10 @@ public class ConnectFour {
                 if (isSinglePlayer && currentPlayer == 1) {
                     //
                     // MINIMAX AI CODE HERE
-                    // ASK HUMAN FOR NAME
-                    // PLAYER PROMPTED TO CHOOSE SYMBOL
-                    // PLAYER PROMPTED TO GO FIRST OR SECOND
-                    //
+                    System.out.print(playerNames[currentPlayer] + "'s turn. Enter column (1-" + COLUMNS + "): ");
+                    column = aiMove();
                     validInput = true;
+
                 } else { // 2 Player Game
                     System.out.print(playerNames[currentPlayer] + "'s turn. Enter column (1-" + COLUMNS + "): ");
                     try {
@@ -163,6 +165,62 @@ public class ConnectFour {
             System.out.println();
         }
     }
+
+
+    // AI
+    private int aiMove() {
+        int bestColumn = -1;
+        int bestScore = Integer.MIN_VALUE;
+
+        for (int column = 0; column < COLUMNS; column++) {
+
+            if (board[0][column] == EMPTY) {
+                int row = dropSymbol(column);
+                int score = calculateScore(row, column);
+
+                // Undo the move
+                board[row][column] = EMPTY;
+
+                // update bestscore to score if score is higher
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestColumn = column;
+                }
+            }
+        }
+
+        return bestColumn;
+    }
+
+    private int calculateScore(int row, int column) {
+        int score = 0;
+
+        score += countConsecutiveSymbols(row, column, 0, 1); // Horizontal
+        score += countConsecutiveSymbols(row, column, 1, 0); // Vertical
+        score += countConsecutiveSymbols(row, column, 1, 1); // (\)
+        score += countConsecutiveSymbols(row, column, 1, -1); // (/)
+
+        return score;
+    }
+
+    private int countConsecutiveSymbols(int row, int column, int dRow, int dColumn) {
+        char playerSymbol = playerSymbols[currentPlayer];
+        int count = 0;
+
+        for (int i = -3; i <= 3; i++) {
+            int r = row + i * dRow;
+            int c = column + i * dColumn;
+
+            if (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS && board[r][c] == playerSymbol) {
+                count++;
+            } else {
+                break;
+            }
+        }
+
+        return count;
+    }
+
 
     // Check Win Methods
 
