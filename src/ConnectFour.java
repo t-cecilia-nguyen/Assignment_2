@@ -1,3 +1,4 @@
+
 // Adam Simcoe - 101442161
 // Nhan Tran -
 // Nhu Ly -
@@ -5,6 +6,8 @@
 
 import java.util.InputMismatchException;
 import java.util.Scanner;
+import java.util.Random;
+
 
 public class ConnectFour {
     private static final int ROWS = 6;
@@ -14,9 +17,12 @@ public class ConnectFour {
     private final char[] playerSymbols = new char[2];
     private static final char[] SYMBOLS = {'R', 'Y'};
 
-    private final char[][] board;
+    private char[][] board;
     private int currentPlayer;
-    private final boolean isSinglePlayer;
+    private boolean isSinglePlayer;
+    private static final char[] PLAYERS = {'R', 'Y'};
+
+
 
     public ConnectFour(){
         // Create new board
@@ -306,3 +312,6 @@ public class ConnectFour {
         return true;
     }
 }
+
+
+
