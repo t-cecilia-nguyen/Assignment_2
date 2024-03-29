@@ -4,6 +4,7 @@
 // Nhu Ly -
 // Trang Nguyen - 100749684
 
+import java.util.Arrays;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 import java.util.Random;
@@ -23,19 +24,18 @@ public class ConnectFour {
     private static final char[] PLAYERS = {'R', 'Y'};
 
 
-
-    public ConnectFour(){
+    public ConnectFour() {
         // Create new board
         board = new char[ROWS][COLUMNS];
 
         // Fill each char in board with EMPTY ('-')
-        for (char[] row: board) {
+        for (char[] row : board) {
             java.util.Arrays.fill(row, EMPTY);
         }
 
         Scanner scanner = new Scanner(System.in);
         int numPlayers = 0;
-        while (numPlayers != 1 && numPlayers != 2){
+        while (numPlayers != 1 && numPlayers != 2) {
             System.out.print("Enter number of players (1 or 2): ");
             try {
                 numPlayers = scanner.nextInt();
@@ -56,7 +56,7 @@ public class ConnectFour {
                 System.out.print("Enter player " + (i + 1) + "'s name: ");
                 playerNames[i] = scanner.next();
                 char playerSymbol = ' ';
-                while (playerSymbol != SYMBOLS[0] && playerSymbol != SYMBOLS[1] || (i == 1 && playerSymbol == playerSymbols[i-1])) {
+                while (playerSymbol != SYMBOLS[0] && playerSymbol != SYMBOLS[1] || (i == 1 && playerSymbol == playerSymbols[i - 1])) {
                     System.out.printf("%s, choose your symbol ('%c' or '%c'): ", playerNames[i], SYMBOLS[0], SYMBOLS[1]);
                     playerSymbol = scanner.next().charAt(0);
                     if (playerSymbol != SYMBOLS[0] && playerSymbol != SYMBOLS[1]) {
@@ -123,7 +123,7 @@ public class ConnectFour {
                         }
                         validInput = true;
                         scanner.nextLine();
-                    } catch (InputMismatchException e){
+                    } catch (InputMismatchException e) {
                         System.out.println("Invalid input. Please enter a number between 1 and " + COLUMNS);
                         printBoard();
                         scanner.nextLine();
@@ -142,7 +142,13 @@ public class ConnectFour {
             printBoard();
 
             if (checkWin(row, column)) {
-                System.out.println(playerNames[currentPlayer] + " wins!");
+                String winningMsg =
+                                "\n-----  Yahooo  -----\n" +
+                                "-`-`-`  \\O/  `-`-`-`\n" +
+                                "`-`-`-   |   -`-`-`-\n" +
+                                "-`-`-`  / \\  `-`-`-`";
+                System.out.println(winningMsg);
+                System.out.println("---- " + playerNames[currentPlayer] + " wins! ----");
                 break;
             } else if (checkDraw()) {
                 System.out.println("It's a draw!");
@@ -174,23 +180,41 @@ public class ConnectFour {
 
 
     // AI
+    private int dropSymbolTemp(char[][] tempBoard, int row) {
+        for (int col = 0; col < COLUMNS; col++) {
+            if (tempBoard[row][col] == EMPTY) {
+                tempBoard[row][col] = playerSymbols[currentPlayer];
+                return col;
+            }
+        }
+        return -1; // row is full
+    }
+
     private int aiMove() {
         int bestColumn = -1;
         int bestScore = Integer.MIN_VALUE;
+        char[][] tempBoard = new char[ROWS][COLUMNS];
 
-        for (int column = 0; column < COLUMNS; column++) {
+        for (int i = 0; i < ROWS; i++) {
+            tempBoard[i] = Arrays.copyOf(board[i], COLUMNS);
+        }
 
-            if (board[0][column] == EMPTY) {
-                int row = dropSymbol(column);
-                int score = calculateScore(row, column);
+        for (int row = ROWS-1; row>=0; row--) {
 
-                // Undo the move
-                board[row][column] = EMPTY;
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted status
+            }
+            int col = dropSymbolTemp(tempBoard, row);
+            if (col != -1) {
+                int score = minimax(tempBoard, row, col, 5, true, Integer.MIN_VALUE, Integer.MAX_VALUE, 1);
 
                 // update bestscore to score if score is higher
                 if (score > bestScore) {
                     bestScore = score;
-                    bestColumn = column;
+                    bestColumn = col;
+
                 }
             }
         }
@@ -198,34 +222,178 @@ public class ConnectFour {
         return bestColumn;
     }
 
-    private int calculateScore(int row, int column) {
+    //@ Calculate weight base on each depth
+    private int roundWeight(int round) {
+        // Calculate weight based on round number
+        int weight = 1;
+        for (int i = 1; i <= round; i++) {
+            weight *= (COLUMNS - i + 1);
+        }
+        return weight;
+    }
+
+    private int minimax(char[][] tempBoard, int row, int column, int depth, boolean maximizingPlayer, int alpha, int beta, int round) {
+        if (depth == 0 || checkWin(row, column) || checkDraw()) {
+            // Calculate the score based on the current round
+            int score = calculateScore(tempBoard, row, column, round);
+            System.out.println("FINAL SCORE: " + score + " at row: " + row + " ,column: " + column);
+            return score;
+        }
+
+        if (maximizingPlayer) {
+            int bestScore = Integer.MIN_VALUE;
+            for (int r = ROWS - 1; r >= 0; r--) {
+                if (tempBoard[r][column] == EMPTY) {
+                    int newCol = dropSymbolTemp(tempBoard, r);
+                    if (newCol != -1) {
+                        int score = minimax(tempBoard, r, newCol, depth - 1, false, alpha, beta, round + 1);
+                        bestScore = Math.max(bestScore, score);
+                        alpha = Math.max(alpha, score);
+                        if (beta <= alpha) {
+                            break;
+                        }
+                    }
+                }
+            }
+            return bestScore;
+        } else {
+            int bestScore = Integer.MAX_VALUE;
+            for (int r = ROWS - 1; r >= 0; r--) {
+                if (tempBoard[r][column] == EMPTY) {
+                    int newCol = dropSymbolTemp(tempBoard, r);
+                    if (newCol != -1) {
+                        int score = minimax(tempBoard, r, newCol, depth - 1, true, alpha, beta, round + 1);
+                        bestScore = Math.min(bestScore, score);
+                        beta = Math.min(beta, score);
+                        if (beta <= alpha) {
+                            break;
+                        }
+                    }
+                }
+            }
+            return bestScore;
+        }
+    }
+
+
+    private int countConsecutiveSymbols(char[][] tempBoard, int row, int column, int dRow, int dColumn, int round) {
+        int player1Count = 0;
+        int player2Count = 0;
+
+        char playerSymbol = playerSymbols[currentPlayer];
+        char opponentSymbol = (playerSymbol == SYMBOLS[0]) ? SYMBOLS[1] : SYMBOLS[0];
+
+        int r = row;
+        int c = column;
+
+        // Check in the positive direction
+        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
+                tempBoard[r][c] == playerSymbol) {
+            player1Count++;
+            r += dRow;
+            c += dColumn;
+        }
+
+        // Check in the negative direction
+        r = row - dRow;
+        c = column - dColumn;
+        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
+                tempBoard[r][c] == playerSymbol) {
+            player1Count++;
+            r -= dRow;
+            c -= dColumn;
+        }
+
+        // Similar logic for opponent's symbols
+        r = row;
+        c = column;
+
+        // Check in the positive direction
+        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
+                tempBoard[r][c] == opponentSymbol) {
+            player2Count++;
+            r += dRow;
+            c += dColumn;
+        }
+
+        // Check in the negative direction
+        r = row - dRow;
+        c = column - dColumn;
+        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
+                tempBoard[r][c] == opponentSymbol) {
+            player2Count++;
+            r -= dRow;
+            c -= dColumn;
+        }
+
+
+
+        // Score the line based on chip counts and apply round-based weight
+        if (player1Count == 4) { // Player 1 wins
+            return 1000 + roundWeight(round);
+        } else if (player2Count == 4) { // Player 2 wins
+            return -1000 - roundWeight(round);
+        } else if (player1Count == 3 && player2Count == 0) { // Potential win for Player 1
+            return 100 + roundWeight(round);
+        } else if (player1Count == 2 && player2Count == 0) { // Favorable for Player 1
+            return 10 + roundWeight(round);
+        } else if (player1Count == 1 && player2Count == 0) { // Slightly favorable for Player 1
+            return 1 + roundWeight(round);
+        } else if (player2Count == 3 && player1Count == 0) { // Potential win for Player 2
+            return -100 - roundWeight(round);
+        } else if (player2Count == 2 && player1Count == 0) { // Favorable for Player 2
+            return -10 - roundWeight(round);
+        } else if (player2Count == 1 && player1Count == 0) { // Slightly favorable for Player 2
+            return -1 - roundWeight(round);
+        }
+
+
+        return 0; // Neutral
+    }
+
+
+    private int calculateScore(char[][] tempBoard, int row, int column, int round) {
         int score = 0;
 
-        score += countConsecutiveSymbols(row, column, 0, 1); // Horizontal
-        score += countConsecutiveSymbols(row, column, 1, 0); // Vertical
-        score += countConsecutiveSymbols(row, column, 1, 1); // (\)
-        score += countConsecutiveSymbols(row, column, 1, -1); // (/)
+
+        score += countConsecutiveSymbols(tempBoard, row, column, 0, 1, round); // Horizontal
+        score += countConsecutiveSymbols(tempBoard, row, column, 1, 0, round); // Vertical
+        score += countConsecutiveSymbols(tempBoard, row, column, 1, 1, round); // (\)
+        score += countConsecutiveSymbols(tempBoard, row, column, 1, -1, round); // (/)
 
         return score;
     }
 
-    private int countConsecutiveSymbols(int row, int column, int dRow, int dColumn) {
-        char playerSymbol = playerSymbols[currentPlayer];
-        int count = 0;
 
-        for (int i = -3; i <= 3; i++) {
-            int r = row + i * dRow;
-            int c = column + i * dColumn;
 
-            if (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS && board[r][c] == playerSymbol) {
-                count++;
-            } else {
-                break;
-            }
-        }
+//    private int calculateScore(int row, int column) {
+//        int score = 0;
+//
+//        score += countConsecutiveSymbols(row, column, 0, 1); // Horizontal
+//        score += countConsecutiveSymbols(row, column, 1, 0); // Vertical
+//        score += countConsecutiveSymbols(row, column, 1, 1); // (\)
+//        score += countConsecutiveSymbols(row, column, 1, -1); // (/)
+//
+//        return score;
+//    }
 
-        return count;
-    }
+//    private int countConsecutiveSymbols ( char[][] tempBoard,int row, int column, int dRow, int dColumn){
+//        playerSymbol = playerSymbols[currentPlayer];
+//        int count = 0;
+//
+//        for (int i = -3; i <= 3; i++) {
+//            int r = row + i * dRow;
+//            int c = column + i * dColumn;
+//
+//            if (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS && tempBoard[r][c] == playerSymbol) {
+//                count++;
+//            } else {
+//                break;
+//            }
+//        }
+//        return count;
+//    }
+
 
 
     // Check Win Methods
@@ -233,12 +401,11 @@ public class ConnectFour {
     private boolean checkHorizontalWin(int row) {
         for (int column = 0; column < COLUMNS - 3; column++) {
             if (board[row][column] == playerSymbols[currentPlayer] &&
-                    board[row][column+1] == playerSymbols[currentPlayer] &&
-                    board[row][column+2] == playerSymbols[currentPlayer] &&
-                    board[row][column+3] == playerSymbols[currentPlayer]) {
+                    board[row][column + 1] == playerSymbols[currentPlayer] &&
+                    board[row][column + 2] == playerSymbols[currentPlayer] &&
+                    board[row][column + 3] == playerSymbols[currentPlayer]) {
                 return true;
             }
-
         }
         return false;
     }
@@ -246,9 +413,9 @@ public class ConnectFour {
     private boolean checkVerticalWin(int column) {
         for (int row = 0; row < ROWS - 3; row++) {
             if (board[row][column] == playerSymbols[currentPlayer] &&
-                    board[row+1][column] == playerSymbols[currentPlayer] &&
-                    board[row+2][column] == playerSymbols[currentPlayer] &&
-                    board[row+3][column] == playerSymbols[currentPlayer]) {
+                    board[row + 1][column] == playerSymbols[currentPlayer] &&
+                    board[row + 2][column] == playerSymbols[currentPlayer] &&
+                    board[row + 3][column] == playerSymbols[currentPlayer]) {
                 return true;
             }
         }
@@ -288,7 +455,7 @@ public class ConnectFour {
 
         // Upwards check
         i = 1;
-        while (row - i >= 0 && column + i < COLUMNS && board[row- i][column + i] == playerSymbol) {
+        while (row - i >= 0 && column + i < COLUMNS && board[row - i][column + i] == playerSymbol) {
             count++;
             i++;
         }
@@ -312,6 +479,7 @@ public class ConnectFour {
         return true;
     }
 }
+
 
 
 
