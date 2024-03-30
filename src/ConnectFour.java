@@ -18,8 +18,6 @@ public class ConnectFour {
     private final char[][] board;
     private int currentPlayer;
     private boolean isSinglePlayer;
-    private static final char[] PLAYERS = {'R', 'Y'};
-
 
     public ConnectFour() {
         // Create new board
@@ -146,7 +144,7 @@ public class ConnectFour {
                                 "`-`-`-   |   -`-`-`-\n" +
                                 "-`-`-`  / \\  `-`-`-`";
                 System.out.println(winningMsg);
-                System.out.println("---- " + playerNames[currentPlayer] + " wins! ----");
+                System.out.println("----  " + playerNames[currentPlayer] + " wins!  ----");
                 break;
             } else if (checkDraw()) {
                 System.out.println("It's a draw!");
@@ -180,7 +178,7 @@ public class ConnectFour {
 
 
 
-    //////-----AI.V@--------///////
+    //////-----AI.V2--------///////
     private List<Integer> getValidLocations(char[][] tempBoard){
         List<Integer> validLocations = new ArrayList<>();
         for( int col = 0; col < COLUMNS; col++){
