@@ -111,7 +111,7 @@ public class ConnectFour {
                     //
                     // MINIMAX AI CODE HERE
                     System.out.print(playerNames[currentPlayer] + "'s turn. Enter column (1-" + COLUMNS + "): ");
-                    column = aiMove();
+                    column = aiMove(board);
                     validInput = true;
 
                 } else { // 2 Player Game
@@ -159,6 +159,8 @@ public class ConnectFour {
         }
     }
 
+
+
     private int dropSymbol(int column) {
         for (int row = ROWS - 1; row >= 0; row--) {
             if (board[row][column] == EMPTY) {
@@ -179,19 +181,21 @@ public class ConnectFour {
     }
 
 
-    // AI
-    private int dropSymbolTemp(char[][] tempBoard, int row) {
-        for (int col = 0; col < COLUMNS; col++) {
+
+    //////-----AI--------///////
+    private int dropSymbolTemp(char[][] tempBoard, int col) {
+        for (int row = ROWS - 1; row >= 0; row--) {
             if (tempBoard[row][col] == EMPTY) {
                 tempBoard[row][col] = playerSymbols[currentPlayer];
-                return col;
+                return row; // Return the row where the symbol was successfully dropped
             }
         }
-        return -1; // row is full
+        return -1; // Column is full, unable to drop the symbol
     }
 
-    private int aiMove() {
+    private int aiMove(char[][] board) {
         int bestColumn = -1;
+        int bestRow = -1;
         int bestScore = Integer.MIN_VALUE;
         char[][] tempBoard = new char[ROWS][COLUMNS];
 
@@ -199,27 +203,33 @@ public class ConnectFour {
             tempBoard[i] = Arrays.copyOf(board[i], COLUMNS);
         }
 
-        for (int row = ROWS-1; row>=0; row--) {
+        for (int col = 0; col < COLUMNS; col++) {
 
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // Restore interrupted status
-            }
-            int col = dropSymbolTemp(tempBoard, row);
-            if (col != -1) {
-                int score = minimax(tempBoard, row, col, 5, true, Integer.MIN_VALUE, Integer.MAX_VALUE, 1);
+            int newRow = dropSymbolTemp(tempBoard, col);
+            if(newRow != -1) {
+                int score = minimax(tempBoard, newRow, col, 5, true, Integer.MIN_VALUE, Integer.MAX_VALUE, 1);
 
-                // update bestscore to score if score is higher
                 if (score > bestScore) {
                     bestScore = score;
                     bestColumn = col;
-
+                    bestRow = newRow;
                 }
             }
+
         }
 
+        System.out.println("\nFINAL BEST SCORE: " + bestScore + " at row: " + bestRow + " ,column: " + bestColumn);
         return bestColumn;
+    }
+
+
+    private boolean isRowFull(char[][] board, int row) {
+        for (int col = 0; col < COLUMNS; col++) {
+            if (board[row][col] == EMPTY) {
+                return false; // Row is not full
+            }
+        }
+        return true; // Row is full
     }
 
     //@ Calculate weight base on each depth
@@ -233,41 +243,43 @@ public class ConnectFour {
     }
 
     private int minimax(char[][] tempBoard, int row, int column, int depth, boolean maximizingPlayer, int alpha, int beta, int round) {
+        int score;
         if (depth == 0 || checkWin(row, column) || checkDraw()) {
-            // Calculate the score based on the current round
-            int score = calculateScore(tempBoard, row, column, round);
-            System.out.println("FINAL SCORE: " + score + " at row: " + row + " ,column: " + column);
+            // return accumulated score
+            score = calculateScore(tempBoard, row, column, round);
             return score;
         }
 
         if (maximizingPlayer) {
             int bestScore = Integer.MIN_VALUE;
-            for (int r = ROWS - 1; r >= 0; r--) {
-                if (tempBoard[r][column] == EMPTY) {
-                    int newCol = dropSymbolTemp(tempBoard, r);
-                    if (newCol != -1) {
-                        int score = minimax(tempBoard, r, newCol, depth - 1, false, alpha, beta, round + 1);
+            for (int col =0 ; col <COLUMNS; col++) {
+                if (tempBoard[row][col] == EMPTY) {
+                    int newRow = dropSymbolTemp(tempBoard, col);
+                    if (newRow != -1) {
+                        score = minimax(tempBoard, newRow, col, depth - 1, false, alpha, beta, round + 1);
                         bestScore = Math.max(bestScore, score);
                         alpha = Math.max(alpha, score);
                         if (beta <= alpha) {
                             break;
                         }
+
                     }
                 }
             }
             return bestScore;
         } else {
             int bestScore = Integer.MAX_VALUE;
-            for (int r = ROWS - 1; r >= 0; r--) {
-                if (tempBoard[r][column] == EMPTY) {
-                    int newCol = dropSymbolTemp(tempBoard, r);
-                    if (newCol != -1) {
-                        int score = minimax(tempBoard, r, newCol, depth - 1, true, alpha, beta, round + 1);
+            for (int col =0 ; col <COLUMNS; col++) {
+                if (tempBoard[row][col] == EMPTY) {
+                    int newRow = dropSymbolTemp(tempBoard, col);
+                    if (newRow != -1) {
+                        score = minimax(tempBoard, newRow, col, depth - 1, true, alpha, beta, round + 1);
                         bestScore = Math.min(bestScore, score);
                         beta = Math.min(beta, score);
                         if (beta <= alpha) {
                             break;
                         }
+
                     }
                 }
             }
@@ -276,80 +288,6 @@ public class ConnectFour {
     }
 
 
-    private int countConsecutiveSymbols(char[][] tempBoard, int row, int column, int dRow, int dColumn, int round) {
-        int player1Count = 0;
-        int player2Count = 0;
-
-        char playerSymbol = playerSymbols[currentPlayer];
-        char opponentSymbol = (playerSymbol == SYMBOLS[0]) ? SYMBOLS[1] : SYMBOLS[0];
-
-        int r = row;
-        int c = column;
-
-        // Check in the positive direction
-        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
-                tempBoard[r][c] == playerSymbol) {
-            player1Count++;
-            r += dRow;
-            c += dColumn;
-        }
-
-        // Check in the negative direction
-        r = row - dRow;
-        c = column - dColumn;
-        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
-                tempBoard[r][c] == playerSymbol) {
-            player1Count++;
-            r -= dRow;
-            c -= dColumn;
-        }
-
-        // Similar logic for opponent's symbols
-        r = row;
-        c = column;
-
-        // Check in the positive direction
-        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
-                tempBoard[r][c] == opponentSymbol) {
-            player2Count++;
-            r += dRow;
-            c += dColumn;
-        }
-
-        // Check in the negative direction
-        r = row - dRow;
-        c = column - dColumn;
-        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
-                tempBoard[r][c] == opponentSymbol) {
-            player2Count++;
-            r -= dRow;
-            c -= dColumn;
-        }
-
-
-
-        // Score the line based on chip counts and apply round-based weight
-        if (player1Count == 4) { // Player 1 wins
-            return 1000 + roundWeight(round);
-        } else if (player2Count == 4) { // Player 2 wins
-            return -1000 - roundWeight(round);
-        } else if (player1Count == 3 && player2Count == 0) { // Potential win for Player 1
-            return 100 + roundWeight(round);
-        } else if (player1Count == 2 && player2Count == 0) { // Favorable for Player 1
-            return 10 + roundWeight(round);
-        } else if (player1Count == 1 && player2Count == 0) { // Slightly favorable for Player 1
-            return 1 + roundWeight(round);
-        } else if (player2Count == 3 && player1Count == 0) { // Potential win for Player 2
-            return -100 - roundWeight(round);
-        } else if (player2Count == 2 && player1Count == 0) { // Favorable for Player 2
-            return -10 - roundWeight(round);
-        } else if (player2Count == 1 && player1Count == 0) { // Slightly favorable for Player 2
-            return -1 - roundWeight(round);
-        }
-
-
-        return 0; // Neutral
-    }
 
 
     private int calculateScore(char[][] tempBoard, int row, int column, int round) {
@@ -363,6 +301,145 @@ public class ConnectFour {
 
         return score;
     }
+
+    private int countConsecutiveSymbols(char[][] tempBoard, int row, int column, int dRow, int dColumn, int round) {
+        int player1Count = countConsecutiveSymbolsInDirection(tempBoard, row, column, dRow, dColumn, playerSymbols[currentPlayer]);
+        int player2Count = countConsecutiveSymbolsInDirection(tempBoard, row, column, dRow, dColumn, getOpponentSymbol());
+
+        return scoreMove(player1Count, player2Count, round);
+    }
+
+    private int countConsecutiveSymbolsInDirection(char[][] tempBoard, int row, int column, int dRow, int dColumn, char symbol) {
+        int count = 0;
+        int r = row;
+        int c = column;
+
+        // Check in the positive direction
+        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS && tempBoard[r][c] == symbol && count < 4) {
+            count++;
+            r += dRow;
+            c += dColumn;
+        }
+
+        // Check in the negative direction
+        r = row - dRow;
+        c = column - dColumn;
+        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS && tempBoard[r][c] == symbol && count < 4) {
+            count++;
+            r -= dRow;
+            c -= dColumn;
+        }
+
+        return count;
+    }
+
+    private char getOpponentSymbol() {
+        char playerSymbol = playerSymbols[currentPlayer];
+        return (playerSymbol == SYMBOLS[0]) ? SYMBOLS[1] : SYMBOLS[0];
+    }
+
+    private int scoreMove(int player1Count, int player2Count, int round) {
+        if (player1Count == 4) {
+            return 1000 + roundWeight(round);
+        } else if (player2Count == 4) {
+            return -1000 - roundWeight(round);
+        } else if (player1Count == 3 && player2Count == 0) {
+            return 100 + roundWeight(round);
+        } else if (player1Count == 2 && player2Count == 0) {
+            return 10 + roundWeight(round);
+        } else if (player1Count == 1 && player2Count == 0) {
+            return 1 + roundWeight(round);
+        } else if (player2Count == 3 && player1Count == 0) {
+            return -100 - roundWeight(round);
+        } else if (player2Count == 2 && player1Count == 0) {
+            return -10 - roundWeight(round);
+        } else if (player2Count == 1 && player1Count == 0) {
+            return -1 - roundWeight(round);
+        }
+
+        return 0; // Neutral
+    }
+
+
+
+
+
+//    private int countConsecutiveSymbols(char[][] tempBoard, int row, int column, int dRow, int dColumn, int round) {
+//        int player1Count = 0;
+//        int player2Count = 0;
+//
+//        char playerSymbol = playerSymbols[currentPlayer];
+//        char opponentSymbol = (playerSymbol == SYMBOLS[0]) ? SYMBOLS[1] : SYMBOLS[0];
+//
+//        int r = row;
+//        int c = column;
+//
+//        // Check in the positive direction
+//        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
+//                tempBoard[r][c] == playerSymbol && player1Count < 4) {
+//            player1Count++;
+//            r += dRow;
+//            c += dColumn;
+//        }
+//
+//        // Check in the negative direction
+//        r = row - dRow;
+//        c = column - dColumn;
+//        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
+//                tempBoard[r][c] == playerSymbol && player1Count < 4) {
+//            player1Count++;
+//            r -= dRow;
+//            c -= dColumn;
+//        }
+//
+//        // Similar logic for opponent's symbols
+//        r = row;
+//        c = column;
+//
+//        // Check in the positive direction
+//        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
+//                tempBoard[r][c] == opponentSymbol && player2Count < 4) {
+//            player2Count++;
+//            r += dRow;
+//            c += dColumn;
+//        }
+//
+//        // Check in the negative direction
+//        r = row - dRow;
+//        c = column - dColumn;
+//        while (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS &&
+//                tempBoard[r][c] == opponentSymbol && player2Count < 4) {
+//            player2Count++;
+//            r -= dRow;
+//            c -= dColumn;
+//        }
+//
+//
+//        // Score the line based on chip counts and apply round-based weight
+//        if (player1Count == 4) { // Player 1 wins
+//            return 1000 + roundWeight(round);
+//        } else if (player2Count == 4) { // Player 2 wins
+//            return -1000 - roundWeight(round);
+//        } else if (player1Count == 3 && player2Count == 0) { // Potential win for Player 1
+//            return 100 + roundWeight(round);
+//        } else if (player1Count == 2 && player2Count == 0) { // Favorable for Player 1
+//            return 10 + roundWeight(round);
+//        } else if (player1Count == 1 && player2Count == 0) { // Slightly favorable for Player 1
+//            return 1 + roundWeight(round);
+//        } else if (player2Count == 3 && player1Count == 0) { // Potential win for Player 2
+//            return -100 - roundWeight(round);
+//        } else if (player2Count == 2 && player1Count == 0) { // Favorable for Player 2
+//            return -10 - roundWeight(round);
+//        } else if (player2Count == 1 && player1Count == 0) { // Slightly favorable for Player 2
+//            return -1 - roundWeight(round);
+//        }
+//
+//
+//        return 0; // Neutral
+//    }
+
+
+
 
 
 
