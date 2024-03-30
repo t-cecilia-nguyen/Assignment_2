@@ -173,15 +173,13 @@ public class ConnectFour {
         int bestScore = Integer.MIN_VALUE;
 
         for (int column = 0; column < COLUMNS; column++) {
-
             if (board[0][column] == EMPTY) {
                 int row = dropSymbol(column);
-                int score = calculateScore(row, column);
+                int score = minimax(4, Integer.MIN_VALUE, Integer.MAX_VALUE, false, row, column);
 
-                // Undo the move
                 board[row][column] = EMPTY;
 
-                // update bestscore to score if score is higher
+                // Update best score and column if score is higher
                 if (score > bestScore) {
                     bestScore = score;
                     bestColumn = column;
@@ -192,35 +190,50 @@ public class ConnectFour {
         return bestColumn;
     }
 
-    private int calculateScore(int row, int column) {
-        int score = 0;
-
-        score += countConsecutiveSymbols(row, column, 0, 1); // Horizontal
-        score += countConsecutiveSymbols(row, column, 1, 0); // Vertical
-        score += countConsecutiveSymbols(row, column, 1, 1); // (\)
-        score += countConsecutiveSymbols(row, column, 1, -1); // (/)
-
-        return score;
-    }
-
-    private int countConsecutiveSymbols(int row, int column, int dRow, int dColumn) {
-        char playerSymbol = playerSymbols[currentPlayer];
-        int count = 0;
-
-        for (int i = -3; i <= 3; i++) {
-            int r = row + i * dRow;
-            int c = column + i * dColumn;
-
-            if (r >= 0 && r < ROWS && c >= 0 && c < COLUMNS && board[r][c] == playerSymbol) {
-                count++;
-            } else {
-                break;
+    private int minimax(int depth, int alpha, int beta, boolean maximizingPlayer, int lastMoveRow, int lastMoveColumn) {
+        if (depth == 0 || checkWin(lastMoveRow, lastMoveColumn)) {
+            if (checkWin(lastMoveRow, lastMoveColumn)) {
+                if (currentPlayer == 1) {
+                    return Integer.MIN_VALUE + depth; // faster wins for bot
+                } else {
+                    return Integer.MAX_VALUE - depth; // slower losses for bot
+                }
             }
+            return 0;
         }
 
-        return count;
+        if (maximizingPlayer) {
+            int maxEval = Integer.MIN_VALUE;
+            for (int column = 0; column < COLUMNS; column++) {
+                if (board[0][column] == EMPTY) {
+                    int row = dropSymbol(column);
+                    int eval = minimax(depth - 1, alpha, beta, false, row, column);
+                    board[row][column] = EMPTY;
+                    maxEval = Math.max(maxEval, eval);
+                    alpha = Math.max(alpha, eval);
+                    if (beta <= alpha) {
+                        break;
+                    }
+                }
+            }
+            return maxEval;
+        } else {
+            int minEval = Integer.MAX_VALUE;
+            for (int column = 0; column < COLUMNS; column++) {
+                if (board[0][column] == EMPTY) {
+                    int row = dropSymbol(column);
+                    int eval = minimax(depth - 1, alpha, beta, true, row, column);
+                    board[row][column] = EMPTY;
+                    minEval = Math.min(minEval, eval);
+                    beta = Math.min(beta, eval);
+                    if (beta <= alpha) {
+                        break;
+                    }
+                }
+            }
+            return minEval;
+        }
     }
-
 
     // Check Win Methods
 
