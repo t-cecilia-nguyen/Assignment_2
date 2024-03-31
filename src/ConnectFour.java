@@ -286,24 +286,24 @@ public class ConnectFour {
             score += 100;
         }
         // Check for connecting 3 with 1 empty space
-        else if (countOccurrences(window, piece) == 3 && countOccurrences(window, 0) == 1) {
+        else if (countOccurrences(window, piece) == 3 && countOccurrences(window, EMPTY) == 1) {
             score += 5;
         }
         // Check for connecting 2 with 2 empty spaces
-        else if (countOccurrences(window, piece) == 2 && countOccurrences(window, 0) == 2) {
+        else if (countOccurrences(window, piece) == 2 && countOccurrences(window, EMPTY) == 2) {
             score += 2;
         }
         // Check for opponent's potential winning move and prioritize blocking it
-        else if (countOccurrences(window, opponentPiece) == 3 && countOccurrences(window, 0) == 1) {
+        else if (countOccurrences(window, opponentPiece) == 3 && countOccurrences(window, EMPTY) == 1) {
             score -= 4;
         }
 
         return score;
     }
 
-    private int countOccurrences(char[] array, int value) {
+    private int countOccurrences(char[] array, char value) {
         int count = 0;
-        for (int element : array) {
+        for (char element : array) {
             if (element == value) {
                 count++;
             }
@@ -429,8 +429,6 @@ public class ConnectFour {
 
 
         }
-
-        System.out.println("\nFINAL BEST SCORE: " + bestScore + " at row: " + bestRow + " ,column: " + bestColumn);
         return bestColumn;
 
     }
