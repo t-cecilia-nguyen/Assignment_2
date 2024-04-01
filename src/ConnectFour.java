@@ -158,12 +158,16 @@ public class ConnectFour {
     }
 
     private void printBoard() {
+        System.out.println();
+        System.out.println("\t1\t2\t3\t4\t5\t6\t7");
+        System.out.println("\t" + "*************************");
         for (char[] row : board) {
             for (char cell : row) {
-                System.out.print(cell + " ");
+                System.out.print("\t" + cell + " ");
             }
             System.out.println();
         }
+        System.out.println("\t" + "*************************");
     }
 
 
