@@ -280,7 +280,7 @@ public class ConnectFour {
     private boolean checkDiagonalWin(int row, int column) {
         char playerSymbol = playerSymbols[currentPlayer];
 
-        // DESC Diagonal (\)
+        // .DESC Diagonal (\)
         int count = 1;
         int i = 1;
 
