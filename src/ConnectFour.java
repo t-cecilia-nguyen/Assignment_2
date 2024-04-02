@@ -75,7 +75,7 @@ public class ConnectFour {
             playerSymbols[0] = playerSymbol;
             //Set bot's symbol and name
             playerSymbols[1] = (playerSymbol == SYMBOLS[0]) ? SYMBOLS[1] : SYMBOLS[0];
-            playerNames[1] = "Bot";
+            playerNames[1] = "Phil";
 
             System.out.print("Do you want to go first or second? (Enter 1 for first, 2 for second): ");
             int choice = 0;
@@ -136,7 +136,13 @@ public class ConnectFour {
             printBoard();
 
             if (checkWin(row, column)) {
-                System.out.println(playerNames[currentPlayer] + " wins!");
+                String winningMsg =
+                        "\n-----  Yahooo  -----\n" +
+                                "-`-`-`  \\O/  `-`-`-`\n" +
+                                "`-`-`-   |   -`-`-`-\n" +
+                                "-`-`-`  / \\  `-`-`-`";
+                System.out.println(winningMsg);
+                System.out.println("----  " + playerNames[currentPlayer] + " wins!  ----");
                 break;
             } else if (checkDraw()) {
                 System.out.println("It's a draw!");
