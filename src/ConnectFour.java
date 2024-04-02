@@ -1,5 +1,5 @@
 // Adam Simcoe - 101442161
-// Nhan Tran -
+// Nhan Tran - 100898539
 // Nhu Ly -
 // Trang Nguyen - 100749684
 
@@ -179,12 +179,23 @@ public class ConnectFour {
         for (int column = 0; column < COLUMNS; column++) {
             if (board[0][column] == EMPTY) {
                 int row = dropSymbol(column);
-                int score = minimax(4, Integer.MIN_VALUE, Integer.MAX_VALUE, false, row, column);
+                boolean isWinningMove = checkWin(row, column);
+                int score = 0;
+
+                if (isWinningMove) {
+                    if (currentPlayer == 0) {
+                        score = Integer.MAX_VALUE;
+                    } else {
+                        score = Integer.MIN_VALUE;
+                    }
+                }else {
+                    score = minimax(4, Integer.MIN_VALUE, Integer.MAX_VALUE, false, row, column);
+                }
 
                 board[row][column] = EMPTY;
 
                 // Update best score and column if score is higher
-                if (score > bestScore) {
+                if (score >= bestScore) {
                     bestScore = score;
                     bestColumn = column;
                 }
